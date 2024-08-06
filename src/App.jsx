@@ -3,7 +3,7 @@ import * as S from "./style";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ko from 'date-fns/locale/ko';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "react-query";
 import { getCityRequest, getCountryRequest } from "./api/apis/options";
 import { useInput } from "./hooks/useInput";
@@ -12,6 +12,7 @@ import { deleteBooksRequest, registerUser, searchUserRequest } from "./api/apis/
 import { useSelect } from "./hooks/useSelect";
 import { userDownloadExcel } from "./hooks/useDownloadExcel";
 import SaveUserInput from "./components/SaveUserInput/SaveUserInput";
+import PopupUserEdit from "./components/PopupUserEdit/PopupUserEdit";
 
 
 function App() {
@@ -21,29 +22,9 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [saveUserInputs, setSaveUserInputs] = useState([]);
-  // const [addUserNmae, setAddUserNmae] = useState([]);
-  // const [addNmae, setAddNmae] = useState([]);
-  // const [addGender, setAddGender] = useState([]);
-  // const [addCountry, setAddCountry] = useState([]);
-  // const [addCity, setAddCity] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modifyUser, setModifyUser] = useState();
   
-  // hooks
-    // 조회
-  const searchUsername = useInput();
-  const searchName = useInput();
-  const searchGender = useRadio();
-  const searchCountry = useSelect();
-  const searchCity = useSelect();
-    // 저장
-  const saveUsername = useInput();
-  const saveName = useInput();
-  const saveGender = useRadio();
-  const saveCountry = useSelect();
-  const saveCity = useSelect();
-
-  
-  const downloadExcel = userDownloadExcel(userList);
-
 
   // 유저 리스트
   const serachUserQuery = useQuery(
@@ -73,9 +54,26 @@ function App() {
       retry: 0,
       refetchOnwindowFocus: false
     },
-    
   )
 
+  
+
+  // 조건 검색
+  const handleSearchUser = () => {
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      alert("시작과 끝 시간 둘다 설정해 주세요");
+    }
+    serachUserQuery.refetch();
+  };
+
+  // hooks
+  const searchUsername = useInput();
+  const searchName = useInput();
+  const searchGender = useRadio("", handleSearchUser); // 콜백 함수 추가
+  const searchCountry = useSelect();
+  const searchCity = useSelect();
+  const downloadExcel = userDownloadExcel(userList);
+  
   // 나라 옵션 목록
   const countryQuery = useQuery(
     ["countryQuery"],
@@ -114,32 +112,56 @@ function App() {
     }
   )
 
-
-
   // 유저 저장 뮤테이션
   const registerUserMutation = useMutation({
     mutationKey: "registerUser",
     mutationFn: registerUser,
     onSuccess: response => {
-      alert("추가완료");
+      serachUserQuery.refetch();
     },
     onError: error => {
-      console.log(error);
+      // alert(error.response.data);
     }
   })
 
-  // 유저 저장
-  const handleAddSave = () => {
-    saveUserInputs.forEach(input => {
-      registerUserMutation.mutate({
-        username: input.username,
-        name: input.name,
-        gender: input.gender,
-        country: input.country,
-        city: input.city
-      });
-    });
+  // input에 중복된 username 확인 
+  const checkForDuplicateUsernames = (inputs) => {
+    const usernameSet = new Set();
+    for (const input of inputs) {
+        if (usernameSet.has(input.username)) {
+            return true;
+        }
+        usernameSet.add(input.username);
+    }
+    return false;
   };
+
+  // 유저 저장하기
+  const handleAddSave = async () => {
+    // 입력 값 중 하나라도 비어 있는지 확인
+    const hasEmptyFields = saveUserInputs.some(input => 
+      !input.username || !input.name || !input.gender || input.country === '0' || input.city === '0'
+    );
+
+    if (hasEmptyFields) {
+      alert("값을 다 입력해 주세요.");
+      return;
+    }
+
+    const duplicateUsernames = checkForDuplicateUsernames(saveUserInputs);
+
+    if (duplicateUsernames) {
+      alert("중복된 아이디가 있습니다.");
+      return;
+    }
+
+    try {
+        await registerUserMutation.mutateAsync(saveUserInputs);
+        setSaveUserInputs([]);
+    } catch (error) {
+        alert("중복된 아이디가 있습니다.");
+    }
+};
   
 
   // 유저 추가 input창
@@ -151,7 +173,8 @@ function App() {
         name: '',
         gender: '',
         country: '0',
-        city: '0'
+        city: '0',
+        checked: false
       }]);
     } else {
       alert("최대 3개의 입력 폼만 추가할 수 있습니다.");
@@ -177,6 +200,11 @@ function App() {
   const handleDeleteUser = () => {
     const deleteUsers = userList.filter(user => user.checked).map(user => user.userId)
     deleteUserMutation.mutate(deleteUsers);
+
+    // 유저 추가 인풋 컴포넌트 삭제
+    setSaveUserInputs(() => 
+      saveUserInputs.filter(input => !input.checked)
+    );
   }
 
    
@@ -193,13 +221,7 @@ function App() {
   const addHoursEndDate = endDate ? addNineHours(new Date(endDate)) : null;
 
 
-  // 조건 검색
-  const handleSearchUser = () => {
-    if ((startDate && !endDate) || (!startDate && endDate)) {
-      alert("시작과 끝 시간 둘다 설정해 주세요");
-    }
-    serachUserQuery.refetch();
-  }
+  
 
 
   // 체크 할때 onChange
@@ -220,7 +242,15 @@ function App() {
 
   }
 
-  console.log(saveUserInputs);
+  // 더블 클릭시 수정 팝업창 활성화
+  const handleOpenModal = (userId) => {
+    const findModiyUser = userList.filter((user) => user.userId === userId)[0]
+    setModifyUser(() => findModiyUser);
+
+    setModalIsOpen(() => !modalIsOpen);
+  }
+
+  // console.log(modalIsOpen);
 
   return (
     <div css={S.layout}>
@@ -255,7 +285,8 @@ function App() {
               onClick={searchGender.handleOnClick}
             />
             남
-            <input type="radio"
+            <input 
+              type="radio"
               name="gender" 
               value="녀"
               checked={searchGender.value === "녀"}
@@ -329,6 +360,9 @@ function App() {
           <button onClick={() => handleDeleteUser()}>삭제</button>
         </div>
 
+        {/* 수정 모달 팝업 */}
+        
+
         {/* 조회된 리스트 */}
         <div css={S.tableLayout}>
           <table css={S.table}>
@@ -354,7 +388,7 @@ function App() {
               }
               {
               userList.map(user => (
-                <tr key={user.userId}>
+                <tr key={user.userId} onDoubleClick={() => handleOpenModal(user.userId)}>
                   <td>
                     <input
                       type="checkbox"
@@ -376,6 +410,17 @@ function App() {
         </div>
 
       </div>
+      {
+        modalIsOpen ?
+          <PopupUserEdit
+            modalIsOpen={modalIsOpen}
+            setModalIsOpen={setModalIsOpen}
+            modifyUser={modifyUser}
+          />
+        :
+          <></>
+      }
+      
     </div>
   );
 }

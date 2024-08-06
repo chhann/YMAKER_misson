@@ -119,9 +119,6 @@ export const table = css`
     font-size: 14px;
   }
 
-  & > tr {
-    
-  }
 
   & tr > td:nth-of-type(1),
   & tr > th:nth-of-type(1) {

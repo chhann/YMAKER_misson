@@ -3,10 +3,6 @@ import * as S from "./style";
 import { useState } from "react";
 import { useQuery } from "react-query";
 import { getCityRequest, getCountryRequest } from "../../api/apis/options";
-import { useInput } from "../../hooks/useInput";
-import { useRadio } from "../../hooks/useRadio";
-import { useSelect } from "../../hooks/useSelect";
-
 
 
 function SaveUserInput({ data, onChange }) {
@@ -59,7 +55,7 @@ function SaveUserInput({ data, onChange }) {
     <>
       <tr css={S.saveTr}>
         {/* 체크박스 */}
-        <td><input type="checkbox" name="" id="" /></td>
+        <td><input type="checkbox" onChange={(e) => handleChange('checked', e.target.checked)}/></td>
 
         {/* 아이디*/}
         <td>
