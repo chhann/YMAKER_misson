@@ -5,7 +5,7 @@ export const registerUser = async (data) => {
 }
 
 export const searchUserRequest = async (params) => {
-    return await instance.get("/user/information", {params});
+    return await instance.get("/user/information", { params });
 }
 
 export const editUserRequest = async (data) => {

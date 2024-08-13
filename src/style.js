@@ -106,7 +106,7 @@ export const tableLayout = css`
 `
 
 export const table = css`
-  position: relative;
+  /* position: relative; */
   border-collapse: collapse;
   width: max-content;
 
@@ -158,6 +158,10 @@ export const table = css`
       text-align: center;
   }
 `
+export const trRow = (gender) => css`
+  background-color: ${gender === "남" ? "#b1bbf5" : "#fffae2"};
+`
+
 export const theadTr = css`
   position: sticky;
   top: 0;

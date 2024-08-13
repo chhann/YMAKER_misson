@@ -13,6 +13,7 @@ import { useSelect } from "./hooks/useSelect";
 import { userDownloadExcel } from "./hooks/useDownloadExcel";
 import SaveUserInput from "./components/SaveUserInput/SaveUserInput";
 import PopupUserEdit from "./components/PopupUserEdit/PopupUserEdit";
+import CitySelector from "./components/CitySelector/CitySelector";
 
 
 function App() {
@@ -24,7 +25,8 @@ function App() {
   const [saveUserInputs, setSaveUserInputs] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modifyUser, setModifyUser] = useState();
-  
+
+  const [selectedCities, setSelectedCities] = useState([]);
 
   // 유저 리스트
   const serachUserQuery = useQuery(
@@ -34,7 +36,7 @@ function App() {
       name: searchName.value,
       gender: searchGender.value,
       countryId: searchCountry.value,
-      cityId: searchCity.value,
+      selectedCitiesList: selectedCities.map(city => city.cityId).join(","),
       startDate: addHoursStartDate,
       endDate: addHoursEndDate
     }),
@@ -46,7 +48,7 @@ function App() {
             checked: false
           }
         }))
-        // console.log(response);
+        console.log(response);
       },
       onError: response => {
         console.log(response); 
@@ -102,8 +104,8 @@ function App() {
       onSuccess: response => {
         setCityOptions(() => response.data.map(city => {
           return {
-            value: city.cityId,
-            label: city.cityName
+            cityId: city.cityId,
+            cityName: city.cityName
           }
         }))
       },
@@ -173,13 +175,15 @@ function App() {
         name: '',
         gender: '',
         country: '0',
-        city: '0',
+        cities: [],
         checked: false
       }]);
     } else {
       alert("최대 3개의 입력 폼만 추가할 수 있습니다.");
     }
   };
+
+  
 
   const handleSaveUserInputChange = (i, newDate) => {
     const newInputs = [...saveUserInputs];
@@ -250,7 +254,6 @@ function App() {
     setModalIsOpen(() => !modalIsOpen);
   }
 
-  // console.log(modalIsOpen);
 
   return (
     <div css={S.layout}>
@@ -307,23 +310,12 @@ function App() {
               ))
               }
             </select>
-            <select value={searchCity.value} onChange={searchCity.handleOnChange}>
-              {
-                searchCountry.value === "0" || searchCountry.value === 0 
-                ? 
-                  <option value="0">도시(전체)</option>
-                :
-                  <>
-                    <option value="0">도시(전체)</option>
-                    {
-                    cityOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </> 
-              }
-            </select>
+            <CitySelector
+              searchCountry={searchCountry}
+              cityOptions={cityOptions}
+              selectedCityies={selectedCities}
+              setSelectedCities={setSelectedCities}
+            />
           </div>
           
           {/* 켈린더 버튼 */}
@@ -360,8 +352,6 @@ function App() {
           <button onClick={() => handleDeleteUser()}>삭제</button>
         </div>
 
-        {/* 수정 모달 팝업 */}
-        
 
         {/* 조회된 리스트 */}
         <div css={S.tableLayout}>
@@ -377,18 +367,20 @@ function App() {
               </tr>
             </thead>
             <tbody>
+              {/* 추가 input들 컴포넌트 */}
               {
                 saveUserInputs.map((input, i) => (
                   <SaveUserInput
                     key={input.id}
                     data={input}
                     onChange={((newDate) => handleSaveUserInputChange(i, newDate))}
+                    inputKey={input.id}
                   />
                 ))
               }
               {
               userList.map(user => (
-                <tr key={user.userId} onDoubleClick={() => handleOpenModal(user.userId)}>
+                <tr key={user.userId} onDoubleClick={() => handleOpenModal(user.userId)} css={S.trRow(user.gender)}>
                   <td>
                     <input
                       type="checkbox"
@@ -401,7 +393,7 @@ function App() {
                   <td>{user.name}</td>
                   <td>{user.gender}</td>
                   <td>{user.countryName}</td>
-                  <td>{user.cityName}</td>
+                  <td>{user.selectedCities.map(city => city.cityName).join(", ")}</td>
                 </tr>
               ))
               }
@@ -410,6 +402,7 @@ function App() {
         </div>
 
       </div>
+      {/* 수정 모달 팝업 */}
       {
         modalIsOpen ?
           <PopupUserEdit

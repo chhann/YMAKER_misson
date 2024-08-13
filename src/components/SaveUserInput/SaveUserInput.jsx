@@ -3,11 +3,13 @@ import * as S from "./style";
 import { useState } from "react";
 import { useQuery } from "react-query";
 import { getCityRequest, getCountryRequest } from "../../api/apis/options";
+import SaveCitySelector from "../SaveCitySelector/SaveCitySelector";
 
 
-function SaveUserInput({ data, onChange }) {
+function SaveUserInput({ data, onChange, inputKey }) {
   const [conutryOptions, setCountryOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
+  const [saveSelectedCities, setSaveSelectedCities] = useState(data.cities || []);
 
   const handleChange = (field, value) => {
     onChange({ ...data, [field]: value});
@@ -41,8 +43,8 @@ function SaveUserInput({ data, onChange }) {
       onSuccess: response => {
         setCityOptions(() => response.data.map(city => {
           return {
-            value: city.cityId,
-            label: city.cityName
+            cityId: city.cityId,
+            cityName: city.cityName
           }
         }))
       },
@@ -105,23 +107,16 @@ function SaveUserInput({ data, onChange }) {
           </select>
         </td>
         <td>
-          <select value={data.city} onChange={(e) => handleChange('city', e.target.value)}>
-          {
-            data.country === "0" || data.country === 0 
-            ? 
-              <option value="0">도시(전체)</option>
-            :
-              <>
-                <option value="0">도시(전체)</option>
-                {
-                cityOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </> 
-          }
-          </select>
+          <SaveCitySelector
+            inputKey={inputKey}
+            data={data}
+            cityOptions={cityOptions}
+            saveSelectedCities={saveSelectedCities}
+            setSaveSelectedCities={(cities) => {
+              setSaveSelectedCities(cities);
+              handleChange('cities', cities);
+            }}
+          />
         </td>
       </tr>  
     </>

@@ -5,3 +5,4 @@ export const saveTr = css`
     width: 80px;
   }
 `
+
