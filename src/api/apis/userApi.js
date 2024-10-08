@@ -8,6 +8,10 @@ export const searchUserRequest = async (params) => {
     return await instance.get("/user/information", { params });
 }
 
+export const getUserCountRequest = async (params) => {
+    return await instance.get("/user/count", {params});
+}
+
 export const editUserRequest = async (data) => {
     return await instance.put("/user/information", data);
 }

@@ -4,20 +4,29 @@ import { useSelect } from "../../hooks/useSelect";
 import * as S from "./style";
 import Modal from 'react-modal'
 import { getCityRequest, getCountryRequest } from "../../api/apis/options";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInput } from "../../hooks/useInput";
 import { useRadio } from "../../hooks/useRadio";
 import { editUserRequest } from "../../api/apis/userApi";
+import { Link } from "react-router-dom";
+import CitySelector from "../CitySelector/CitySelector";
 
-function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
+function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser, selectLanguage }) {
   const [conutryOptions, setCountryOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
   const searchCountry = useSelect(modifyUser.countryId);
-  const searchCity = useSelect(modifyUser.cityId);
+  // const searchCity = useSelect(modifyUser.cityId);
   const searchUsername = useInput(modifyUser.userName);
   const searchName = useInput(modifyUser.name);
   const searchGender = useRadio(modifyUser.gender);
+  const [selectedCities, setSelectedCities] = useState([]);
 
+  // modifyUser.selectedCities가 업데이트될 때 selectedCities를 설정
+  useEffect(() => {
+    if (modifyUser.selectedCities) {
+      setSelectedCities(modifyUser.selectedCities);
+    }
+  }, [modifyUser.selectedCities]);
 
   // 나라 옵션 목록
   const countryQuery = useQuery(
@@ -47,8 +56,8 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
       onSuccess: response => {
         setCityOptions(() => response.data.map(city => {
           return {
-            value: city.cityId,
-            label: city.cityName
+            cityId: city.cityId,
+            cityName: city.cityName
           }
         }))
       },
@@ -72,7 +81,6 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
     }
   )
 
-  console.log(searchCountry.value);
 
   // 각 입력값이 유효한지 확인
   const validateUserInput = (searchUsername, searchName, searchGender, searchCountry, searchCity) => {
@@ -80,15 +88,14 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
     const isNameValid = searchName.value !== "" && searchName.value !== undefined;
     const isGenderValid = searchGender.value !== "" && searchGender.value !== undefined;
     const isCountryValid = parseInt(searchCountry.value) !== 0 && searchCountry.value !== "" && searchCountry.value !== undefined;
-    const isCityValid = parseInt(searchCity.value) !== 0 && searchCity.value !== "" && searchCity.value !== undefined;
   
     // 모든 조건이 만족되면 true 반환, 그렇지 않으면 false 반환
-    return isUsernameValid && isNameValid && isGenderValid && isCountryValid && isCityValid;
+    return isUsernameValid && isNameValid && isGenderValid && isCountryValid;
   }
   
   // 유저 변경
   const handleModifyUser = () => {
-    const isValid = validateUserInput(searchUsername, searchName, searchGender, searchCountry, searchCity);
+    const isValid = validateUserInput(searchUsername, searchName, searchGender, searchCountry );
     if (isValid) {
       editUserMutation.mutate({
         userId: modifyUser.userId,
@@ -96,7 +103,7 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
         name: searchName.value,
         gender: searchGender.value,
         countryId: parseInt(searchCountry.value),
-        cityId: parseInt(searchCountry.value)
+        cities: selectedCities
       })
       
     } else {
@@ -106,13 +113,23 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
   }
 
 
-
   return (
     <Modal 
       isOpen={modalIsOpen}
+      appElement={document.getElementById('root')}
       css={S.modal}
     >
       <div css={S.modalLayout}>
+        {/* 링크 */}
+        <div css={S.linkLayout}>
+          <Link
+            css={S.link}
+            to={`/user/detail?username=${modifyUser.userName}`}
+          >
+            Link
+          </Link>
+
+        </div>
         {/* 수정할 데이터 */}
         <div css={S.modalBody}>
           {/* 아이디 */}
@@ -167,7 +184,7 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
 
           <div>
             <input type="text" placeholder="도시" disabled/>
-            <select value={searchCity.value} onChange={searchCity.handleOnChange}>
+            {/* <select value={searchCity.value} onChange={searchCity.handleOnChange}>
               {
                 modifyUser.countryId === "0" || modifyUser.countryId === 0 
                 ? 
@@ -183,7 +200,16 @@ function PopupUserEdit({ modalIsOpen, setModalIsOpen, modifyUser }) {
                     ))}
                   </> 
               }
-            </select>
+            </select> */}
+            <div>
+              <CitySelector
+                searchCountry={searchCountry}
+                cityOptions={cityOptions}
+                selectedCityies={selectedCities}
+                setSelectedCities={setSelectedCities}
+                selectLanguage={selectLanguage.value}
+              />
+            </div>
           </div>
         </div>
 

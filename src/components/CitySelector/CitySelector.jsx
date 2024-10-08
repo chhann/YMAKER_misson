@@ -2,7 +2,7 @@
 import * as S from "./style";
 import { useEffect, useState } from "react";
 
-function CitySelector({ searchCountry, cityOptions, selectedCityies, setSelectedCities  }) {
+function CitySelector({ searchCountry, cityOptions, selectedCityies, setSelectedCities, selectLanguage  }) {
   const [isDropdownOpen, setIsDropdownOpen ] = useState(false);
 
 
@@ -40,7 +40,9 @@ function CitySelector({ searchCountry, cityOptions, selectedCityies, setSelected
           ? 
             selectedCityies.map(city => city.cityName).join(",")
           :
-            "도시(전체)"
+            <>
+              {selectLanguage === "한글" ? "도시(전체)" : "Cities(all)"}
+            </>
         }
       </div>
       {
@@ -49,19 +51,9 @@ function CitySelector({ searchCountry, cityOptions, selectedCityies, setSelected
             {
               searchCountry.value === "0" || searchCountry.value === 0
               ?
-                <li value="0">도시전체(전체)</li>
+                <li value="0">{selectLanguage === "한글" ? "도시(전체)" : "Cities(all)"}</li>
               :
                 <>
-                  {/* <li value="0">
-                    <label>
-                      <input 
-                        type="checkbox"
-                        checked={selectedCityies.some(city => city.cityId === option.cityId)}
-                        onChange={() => handleCheckboxChange(option)}
-                      />
-                      도시전체(전체)
-                    </label>
-                  </li> */}
                   {cityOptions.map((option) => (
                     <li key={option.cityId} css={S.liContainer}>
                       <label>

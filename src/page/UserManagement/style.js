@@ -9,6 +9,8 @@ export const layout = css`
 
 export const container = css`
   border: 1px solid black;
+  position: relative;
+  height: 560px;
 `
 
 export const inputLayout = css`
@@ -32,7 +34,7 @@ export const inputText = css`
 export const inputRadio = css`
   padding: 5px 5px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
 
 `
 
@@ -88,19 +90,6 @@ export const tableLayout = css`
   padding: 0;
   border: 1px solid #c7c7c7;
   max-height: 400px; /* height 대신 max-height 사용 */
-  overflow-y: auto; /* 세로 스크롤만 허용 */
-
-  /* 스크롤바 커스터마이징 */
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-    background-color: #f1f1f1;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #c1c1c1;
-    border-radius: 4px;
-  }
 `
 
 export const table = css`
@@ -117,6 +106,14 @@ export const table = css`
     font-size: 14px;
   }
 
+  & > thead > tr {
+    height: 10px;
+  }
+
+  & tr {
+    height: 60px;
+  }
+
   /* 선택 열 */
   & tr > td:nth-of-type(1),
   & tr > th:nth-of-type(1) {
@@ -128,7 +125,7 @@ export const table = css`
   & tr > th:nth-of-type(2),
   & tr > td:nth-of-type(2) {
     min-width: 100px;
-    text-align: center; /* 가운데 정렬 */
+    text-align: center;
   }
 
   /* 이름 열 */
@@ -163,9 +160,8 @@ export const trRow = (gender) => css`
   background-color: ${gender === "남" ? "#b1bbf5" : "#fffae2"};
 `
 
-export const theadTr = css`
-  position: sticky;
-  top: 0;
-  background-color: #ffffff;
-`
-
+export const paging = css`
+  position: absolute;
+  bottom: 2px;
+  right: 270px;
+`;

@@ -44,6 +44,9 @@ export const modalBody = css`
     width: 158px;
     height: 26px;
   }
+  & > div:nth-of-type(5) {
+    display: flex;
+  } 
 `;
 
 export const modalButton = css`
@@ -68,3 +71,33 @@ export const modalButton = css`
     background-color: #fcfcfc;
   }
 `;
+
+export const linkLayout = css`
+  position: relative;
+`
+
+
+export const link = css`
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 25px;
+  margin: 0 3px;
+  right: -30px;
+  top: -25px;
+  border-radius: 15px;
+  border: 1px solid gray;
+  text-decoration: none;
+  background-color: #e7e5e5;
+  color: black;
+
+  &:hover {
+    background-color: #dddddd;
+  }
+
+  &:active {
+    background-color: #fcfcfc;
+  }
+`
